@@ -1,6 +1,6 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
-# 2.0
+# 2.1
 
 fsize = 2
 
@@ -15,7 +15,7 @@ def get_free_space_mb(folder):
         return free_bytes.value / 1024 / 1024
     else:
         st = os.statvfs(folder)
-        return st.f_bavail * st.f_frsize / 1024
+        return st.f_bavail * st.f_frsize / 1024 / 1024
 
 if not os.path.exists('bad'):
     os.mkdir('bad')
@@ -24,7 +24,7 @@ free = get_free_space_mb('.')
 
 print("Wite...")
 for i in range(0,int(free // fsize)):
-    print('\r' + str(i * fsize) + 'M/' + str(free), end='')
+    print('\r' + str(i * fsize) + 'M/' + str(free) + 'M', end='')
     b = os.urandom(1024 * 1024 * fsize)
     n = hashlib.md5(b).hexdigest()[:8]
     try:
@@ -38,7 +38,7 @@ for i in range(0,int(free // fsize)):
 print("\nTest...")
 i = 0
 for key in os.listdir('.'):
-    print('\r' + str(i * fsize) + 'M/' + str(free), end='')
+    print('\r' + str(i * fsize) + 'M/' + str(free) + 'M', end='')
     try:
         with open(key,'rb') as f:
             if hashlib.md5(f.read()).hexdigest()[:8] == key:
