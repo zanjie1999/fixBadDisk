@@ -19,7 +19,7 @@ def get_free_space_mb(folder):
         st = os.statvfs(folder)
         return st.f_bavail * st.f_frsize / 1024 / 1024
 
-if len(argv) > 0:
+if len(argv) > 1:
     if argv[1] == '-h' or argv[1] == '--help':
         print('Usage: fixBadDisk.py [filesize] [w|t]')
         print('\t-h, --help: 显示帮助信息')
