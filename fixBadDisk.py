@@ -1,6 +1,6 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
-# 2.2
+# 2.3
 
 fsize = 2
 doTest = True
