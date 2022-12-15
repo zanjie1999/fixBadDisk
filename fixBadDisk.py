@@ -1,12 +1,12 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
-# 2.3
+# 3.0
 
 fsize = 2
 doTest = True
 doWite = True
 
-import os,hashlib,uuid,platform
+import os,hashlib,uuid,platform,time
 from sys import argv
 
 def get_free_space_mb(folder):
@@ -28,28 +28,34 @@ if len(argv) > 1:
         print('\tt: 只测试')
         print('默认2M，写入后测试')
         exit()
+    if argv[1] == 'w':
+        doTest = False
+    elif argv[1] == 't' or argv[1] == 'r':
+        doWite = False
     else:
         fsize = int(argv[1])
         
-    if len(argv) > 1:
+    if len(argv) > 2:
         if argv[2] == 'w':
             doTest = False
-        elif argv[2] == 't':
+        elif argv[2] == 't' or argv[2] == 'r':
             doWite = False
 
 print("Filesize: " + str(fsize) + "M")
-print("Test: " + str(doTest))
 print("Wite: " + str(doWite))
+print("Test: " + str(doTest))
         
 if not os.path.exists('bad'):
     os.mkdir('bad')
 os.chdir('bad')
-free = get_free_space_mb('.')
 
 if doWite:
-    print("Wite...")
+    print("\nWite...")
+    st = time.time()
+    cn = 0
+    free = get_free_space_mb('.')
     for i in range(0,int(free // fsize)):
-        print('\r' + str(i * fsize) + 'M/' + str(free) + 'M', end='')
+        print('\r' + str(i * fsize) + 'M/' + str(free) + 'M ' + str(round(cn * fsize / (time.time() - st), 3)) + 'M/s', end='')
         b = os.urandom(1024 * 1024 * fsize)
         n = hashlib.md5(b).hexdigest()[:8]
         try:
@@ -59,11 +65,16 @@ if doWite:
             os.remove(n)
             print(' except ' + n)
             print(e)
+        cn += 1
 
 if doTest:
     print("\nTest...")
-    for i, key in enumerate(os.listdir('.')):
-        print('\r' + str(i * fsize) + 'M/' + str(free) + 'M', end='')
+    st = time.time()
+    cn = 0
+    files = os.listdir('.')
+    allsize = len(files) * fsize
+    for i, key in enumerate(files):
+        print('\r' + str(i * fsize) + 'M/' + str(allsize) + 'M ' + str(round(cn * fsize / (time.time() - st), 3)) + 'M/s', end='')
         try:
             with open(key,'rb') as f:
                 if hashlib.md5(f.read()).hexdigest()[:8] == key:
@@ -74,4 +85,5 @@ if doTest:
         except Exception as e:
             print(' except ' + key)
             print(e)
+        cn += 1
 
