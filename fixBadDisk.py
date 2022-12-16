@@ -87,5 +87,5 @@ if doTest:
             print(e)
         cn += 1
 
-if os.path.exists('bad') and not os.listdir('bad')):
+if os.path.exists('bad') and not os.listdir('bad'):
     os.rmdir('bad')
