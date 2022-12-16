@@ -1,6 +1,6 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
-# 3.0
+# 3.1
 
 fsize = 2
 doTest = True
@@ -87,3 +87,5 @@ if doTest:
             print(e)
         cn += 1
 
+if os.path.exists('bad') and not os.listdir('bad')):
+    os.rmdir('bad')
