@@ -1,13 +1,13 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
-# 3.3
+# 3.6
+
+import os,hashlib,platform,time
+from sys import argv
 
 fsize = 2
-doTest = True
+doTest = os.path.exists('bad')
 doWite = True
-
-import os,hashlib,uuid,platform,time
-from sys import argv
 
 def get_free_space_mb(folder):
     if platform.system() == 'Windows':
@@ -21,13 +21,15 @@ def get_free_space_mb(folder):
 
 if len(argv) > 1:
     if argv[1] == '-h' or argv[1] == '--help':
-        print('Usage: fixBadDisk.py [filesize] [w|t] [maxsize]')
-        print('\t-h, --help: 显示帮助信息')
-        print('\tfilesize: 单个文件大小，fat32下最大为4096M，且最多33000个文件')
-        print('\tw: 只写入')
-        print('\tt: 只测试')
-        print('\tmaxsize: 最大写入量，用于写入测速时指定大小')
-        print('默认2M，写入后测试')
+        print('Usage: fixBadDisk.py [filesize] [w|t|r] [maxsize]')
+        print('  -h, --help: 显示当前帮助信息')
+        print('  filesize: 单个文件大小，fat32下最大为4096M，且最多33000个文件')
+        print('  w: 写入测试')
+        print('  t或r: 读测试')
+        print('  maxsize: 最大写入量，用于写入测速时指定大小')
+        print('默认2M，写入满后退出，重新拔插再运行将测试，举个栗子：')
+        print('测试4k读速度 fixBadDisk.py 0.004 w 100')
+        print('测试4k写速度 fixBadDisk.py 0.004 r 100')
         exit()
     if argv[1] == 'w':
         doTest = False
@@ -54,6 +56,9 @@ if doWite:
     print("\nWite...")
     allt = 0
     cn = 0
+    st = 0
+    b = None
+    n = None
     if len(argv) > 3:
         free = float(argv[3])
     else:
@@ -62,9 +67,11 @@ if doWite:
         b = os.urandom(int(1024 * 1024 * fsize))
         n = hashlib.md5(b).hexdigest()[:8]
         try:
-            with open(n,'wb') as f:
+            st = time.time()
+            with open(n,'wb', buffering=0) as f:
                 st = time.time()
                 f.write(b)
+                f.flush()
                 f.close()
                 allt += time.time() - st
         except Exception as e:
@@ -79,12 +86,13 @@ if doTest:
     print("\nTest...")
     allt = 0
     cn = 0
+    d = None
     files = os.listdir('.')
     allsize = len(files) * fsize
     for i, key in enumerate(files):
         try:
-            with open(key,'rb') as f:
-                st = time.time()
+            st = time.time()
+            with open(key,'rb', buffering=0) as f:
                 d = f.read()
                 f.close()
                 allt += time.time() - st
