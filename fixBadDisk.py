@@ -29,7 +29,7 @@ if len(argv) > 1:
         print('  maxsize: 最大写入量，用于写入测速时指定大小')
         print('默认2M，写入满后退出，重新拔插再运行将测试，举个栗子：')
         print('测试4k读速度 fixBadDisk.py 0.004 w 100')
-        print('测试4k写速度 fixBadDisk.py 0.004 r 100')
+        print('测试4k写速度 fixBadDisk.py 0.004 r')
         exit()
     if argv[1] == 'w':
         doTest = False
