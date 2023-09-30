@@ -1,11 +1,11 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
-# 3.6
+# 4.0
 
 import os,hashlib,platform,time
 from sys import argv
 
-fsize = 2
+fsize = 5
 doTest = os.path.exists('bad')
 doWite = True
 
@@ -63,13 +63,13 @@ if doWite:
         free = float(argv[3])
     else:
         free = get_free_space_mb('.')
-    for i in range(0, int(free // fsize)):
+    allCount = int(free // fsize)
+    for i in range(0, allCount):
         b = os.urandom(int(1024 * 1024 * fsize))
         n = hashlib.md5(b).hexdigest()[:8]
         try:
             st = time.time()
             with open(n,'wb', buffering=0) as f:
-                st = time.time()
                 f.write(b)
                 f.flush()
                 f.close()
@@ -78,7 +78,14 @@ if doWite:
             os.remove(n)
             print(' except ' + n)
             print(e)
-        print('\r' + str(round(i * fsize, 3)) + 'M/' + str(free) + 'M ' + str(round(cn * fsize / allt, 3)) + 'M/s', end='     ')
+        ms = cn * fsize / allt
+        if ms == 0:
+            ms = 0.0000000001
+        um, us = divmod(allt, 60)
+        uh, um = divmod(um, 60)
+        lm, ls = divmod((allCount - i) * fsize / ms, 60)
+        lh, lm = divmod(lm, 60)
+        print("\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f}".format(i * fsize, free, ms, uh, um, us, lh, lm, ls), end='         ')
         cn += 1
         
 
@@ -88,7 +95,8 @@ if doTest:
     cn = 0
     d = None
     files = os.listdir('.')
-    allsize = len(files) * fsize
+    allCount = len(files)
+    allsize = allCount * fsize
     for i, key in enumerate(files):
         try:
             st = time.time()
@@ -103,7 +111,14 @@ if doTest:
         except Exception as e:
             print(' except ' + key)
             print(e)
-        print('\r' + str(round(i * fsize, 3)) + 'M/' + str(allsize) + 'M ' + str(round(cn * fsize / allt, 3)) + 'M/s', end='     ')
+        ms = cn * fsize / allt
+        if ms == 0:
+            ms = 0.0000000001
+        um, us = divmod(allt, 60)
+        uh, um = divmod(um, 60)
+        lm, ls = divmod((allCount - i) * fsize / ms, 60)
+        lh, lm = divmod(lm, 60)
+        print("\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f}".format(i * fsize, allsize, ms, uh, um, us, lh, lm, ls), end='         ')
         cn += 1
 
 if os.path.exists('bad') and not os.listdir('bad'):
