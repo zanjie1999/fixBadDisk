@@ -1,13 +1,13 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
-# 4.0
+# 5.0
 
 import os,hashlib,platform,time
 from sys import argv
 
 fsize = 5
-doTest = os.path.exists('bad')
-doWite = True
+doTest = os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK')
+doWrite = not os.path.exists('fixBadDiskWriteOK')
 
 def get_free_space_mb(folder):
     if platform.system() == 'Windows':
@@ -34,7 +34,7 @@ if len(argv) > 1:
     if argv[1] == 'w':
         doTest = False
     elif argv[1] == 't' or argv[1] == 'r':
-        doWite = False
+        doWrite = False
     else:
         fsize = float(argv[1])
         
@@ -42,18 +42,18 @@ if len(argv) > 1:
         if argv[2] == 'w':
             doTest = False
         elif argv[2] == 't' or argv[2] == 'r':
-            doWite = False
+            doWrite = False
 
 print("Filesize: " + str(fsize) + "M")
-print("Wite: " + str(doWite))
+print("Write: " + str(doWrite))
 print("Test: " + str(doTest))
         
 if not os.path.exists('bad'):
     os.mkdir('bad')
 os.chdir('bad')
 
-if doWite:
-    print("\nWite...")
+if doWrite:
+    print("\nWrite...")
     allt = 0
     cn = 0
     st = 0
@@ -87,7 +87,10 @@ if doWite:
         lh, lm = divmod(lm, 60)
         print("\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f}".format(i * fsize, free, ms, uh, um, us, lh, lm, ls), end='         ')
         cn += 1
-        
+
+    os.chdir('..')
+    open('fixBadDiskWriteOK','wb', buffering=0).close()
+    print("\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")        
 
 if doTest:
     print("\nTest...")
@@ -121,5 +124,13 @@ if doTest:
         print("\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f}".format(i * fsize, allsize, ms, uh, um, us, lh, lm, ls), end='         ')
         cn += 1
 
+    os.chdir('..')
+    os.remove('fixBadDiskWriteOK')
+    print("\nTest complete 测试完成")
+
+
 if os.path.exists('bad') and not os.listdir('bad'):
     os.rmdir('bad')
+
+print("Press Enter to exit 按回车退出")
+input()
