@@ -1,8 +1,8 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
-# 5.0
+# 6.0
 
-import os,hashlib,platform,time
+import os,hashlib,platform,time,threading
 from sys import argv
 
 fsize = 5
@@ -18,6 +18,19 @@ def get_free_space_mb(folder):
     else:
         st = os.statvfs(folder)
         return st.f_bavail * st.f_frsize / 1024 / 1024
+    
+def test_file(d, key):
+    global tIndex
+    if hashlib.md5(d).hexdigest()[:8] == key:
+        os.remove(key)
+    else:
+        print(' error ' + key)
+    tIndex += 1
+
+def gen_file(fsize):
+    global tFile,tName
+    tFile = os.urandom(int(1024 * 1024 * fsize))
+    tName = hashlib.md5(tFile).hexdigest()[:8]
 
 if len(argv) > 1:
     if argv[1] == '-h' or argv[1] == '--help':
@@ -27,22 +40,27 @@ if len(argv) > 1:
         print('  w: 写入测试')
         print('  t或r: 读测试')
         print('  maxsize: 最大写入量，用于写入测速时指定大小')
-        print('默认2M，写入满后退出，重新拔插再运行将测试，举个栗子：')
+        print('输出：已写入/总容量 平均速度 已用时间/剩余时间 (当前速度 当前用时)')
+        print('默认' + str(fsize) + 'M，写入满后退出，重新拔插再运行将测试，举个栗子：')
         print('测试4k读速度 fixBadDisk.py 0.004 w 100')
         print('测试4k写速度 fixBadDisk.py 0.004 r')
         exit()
     if argv[1] == 'w':
+        doWrite = True
         doTest = False
     elif argv[1] == 't' or argv[1] == 'r':
         doWrite = False
+        doTest = True
     else:
         fsize = float(argv[1])
         
     if len(argv) > 2:
         if argv[2] == 'w':
+            doWrite = True
             doTest = False
         elif argv[2] == 't' or argv[2] == 'r':
             doWrite = False
+            doTest = True
 
 print("Filesize: " + str(fsize) + "M")
 print("Write: " + str(doWrite))
@@ -52,28 +70,37 @@ if not os.path.exists('bad'):
     os.mkdir('bad')
 os.chdir('bad')
 
+echo = ""
+tFile = None
+tName = None
+n = None
 if doWrite:
     print("\nWrite...")
     allt = 0
     cn = 0
     st = 0
-    b = None
-    n = None
     if len(argv) > 3:
         free = float(argv[3])
     else:
         free = get_free_space_mb('.')
     allCount = int(free // fsize)
+    gen_file(fsize)
     for i in range(0, allCount):
-        b = os.urandom(int(1024 * 1024 * fsize))
-        n = hashlib.md5(b).hexdigest()[:8]
+        # Write faster than generate  1ms
+        while n == tName:
+            time.sleep(0.001)
+        b = tFile
+        n = tName
+        threading.Thread(target=gen_file, args=(fsize,)).start()
+        nt = 0.0000000001
         try:
             st = time.time()
             with open(n,'wb', buffering=0) as f:
                 f.write(b)
                 f.flush()
                 f.close()
-                allt += time.time() - st
+                nt = time.time() - st
+                allt += nt
         except Exception as e:
             os.remove(n)
             print(' except ' + n)
@@ -85,13 +112,17 @@ if doWrite:
         uh, um = divmod(um, 60)
         lm, ls = divmod((allCount - i) * fsize / ms, 60)
         lh, lm = divmod(lm, 60)
-        print("\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f}".format(i * fsize, free, ms, uh, um, us, lh, lm, ls), end='         ')
+        echo = "\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(i * fsize, free, ms, uh, um, us, lh, lm, ls, fsize / nt, nt)
+        print(echo, end='         ')
         cn += 1
 
     os.chdir('..')
-    open('fixBadDiskWriteOK','wb', buffering=0).close()
-    print("\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")        
+    with open('fixBadDiskWriteOK','wb', buffering=0) as f:
+        f.write(bytes(echo, encoding='utf-8'))
+        f.close()
+    print("\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")
 
+tIndex = 0
 if doTest:
     print("\nTest...")
     allt = 0
@@ -101,16 +132,15 @@ if doTest:
     allCount = len(files)
     allsize = allCount * fsize
     for i, key in enumerate(files):
+        nt = 0.0000000001
         try:
             st = time.time()
             with open(key,'rb', buffering=0) as f:
                 d = f.read()
                 f.close()
-                allt += time.time() - st
-                if hashlib.md5(d).hexdigest()[:8] == key:
-                    os.remove(key)
-                else:
-                    print(' error ' + key)
+                nt = time.time() - st
+                allt += nt
+                threading.Thread(target=test_file, args=(d, key)).start()
         except Exception as e:
             print(' except ' + key)
             print(e)
@@ -121,11 +151,17 @@ if doTest:
         uh, um = divmod(um, 60)
         lm, ls = divmod((allCount - i) * fsize / ms, 60)
         lh, lm = divmod(lm, 60)
-        print("\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f}".format(i * fsize, allsize, ms, uh, um, us, lh, lm, ls), end='         ')
+        print("\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(i * fsize, allsize, ms, uh, um, us, lh, lm, ls, fsize / nt, nt), end='         ')
         cn += 1
 
-    os.chdir('..')
-    os.remove('fixBadDiskWriteOK')
+    # Wait test end
+    while tIndex != allCount:
+        time.sleep(0.5)
+
+    try:
+        os.remove('../fixBadDiskWriteOK')
+    except:
+        pass
     print("\nTest complete 测试完成")
 
 
