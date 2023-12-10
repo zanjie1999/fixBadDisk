@@ -8,6 +8,11 @@
 使用本工具测速，可以避免设备对像AS SSD Benchmark或是CrystalDiskMark等跑分测速工具的神仙优化，测出最真实的速度，最接近实际使用体验  
 
 ## 如何使用
+最简单的方式：放到要测的盘，直接运行，等待写完全盘，拔出盘，重新插上，再运行  
+输出：已写入/总容量 Min:最小速度 Max:最大速度 平均速度 已用时间/剩余时间 (当前速度 当前用时)
+
+### 进阶
+
 fixBadDisk [filesize] [w|t]  
 -h, --help: 显示帮助信息  
 filesize: 单个文件大小，fat32下最大为4096M，且最多33000个文件  
@@ -29,4 +34,4 @@ maxsize: 最大写入量，用于写入测速时指定大小
 `fixBadDisk 0.004 t`
 
 mac和linux系统自带Python3，上面绿色按钮下载或者 [右键另存为](https://github.com/zanjie1999/fixBadDisk/raw/main/fixBadDisk.py) ，把文件放在需要检测的盘，直接`python3 fixBadDisk.py`运行  
-Windows用户可以在 [这里](https://github.com/zanjie1999/fixBadDisk/releases) 下载fixBadDisk.exe，放到需要检测的盘直接点开运行，默认2m一个文件，当然他也支持上方的配置参数  
+Windows用户可以在 [这里](https://github.com/zanjie1999/fixBadDisk/releases) 下载fixBadDisk.exe，放到需要检测的盘直接点开运行，默认5m一个文件，当然他也支持上方的配置参数  
