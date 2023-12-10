@@ -1,6 +1,7 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
-# 6.0
+
+ver = "7.0"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -34,13 +35,14 @@ def gen_file(fsize):
 
 if len(argv) > 1:
     if argv[1] == '-h' or argv[1] == '--help':
+        print('一键 u盘/内存卡/硬盘 坏块/坏道 维修工具 防作弊测速工具 v' + ver)
         print('Usage: fixBadDisk.py [filesize] [w|t|r] [maxsize]')
         print('  -h, --help: 显示当前帮助信息')
         print('  filesize: 单个文件大小，fat32下最大为4096M，且最多33000个文件')
         print('  w: 写入测试')
         print('  t或r: 读测试')
         print('  maxsize: 最大写入量，用于写入测速时指定大小')
-        print('输出：已写入/总容量 平均速度 已用时间/剩余时间 (当前速度 当前用时)')
+        print('输出：已写入/总容量 Min:最小速度 Max:最大速度 平均速度 已用时间/剩余时间 (当前速度 当前用时)')
         print('默认' + str(fsize) + 'M，写入满后退出，重新拔插再运行将测试，举个栗子：')
         print('测试4k读速度 fixBadDisk.py 0.004 w 100')
         print('测试4k写速度 fixBadDisk.py 0.004 r')
@@ -79,6 +81,8 @@ if doWrite:
     allt = 0
     cn = 0
     st = 0
+    minsp = 2147483647
+    maxsp = 0
     if len(argv) > 3:
         free = float(argv[3])
     else:
@@ -112,12 +116,16 @@ if doWrite:
         uh, um = divmod(um, 60)
         lm, ls = divmod((allCount - i) * fsize / ms, 60)
         lh, lm = divmod(lm, 60)
-        echo = "\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(i * fsize, free, ms, uh, um, us, lh, lm, ls, fsize / nt, nt)
+        nsp = fsize / nt
+        if nsp > maxsp:
+            maxsp = nsp
+        if nsp < minsp:
+            minsp = nsp
+        echo = "\r{:.3f}M/{:.3f}M Min:{:.3f}M/s Max:{:.3f}M/s {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(i * fsize, free, minsp, maxsp, ms, uh, um, us, lh, lm, ls, nsp, nt)
         print(echo, end='         ')
         cn += 1
 
-    os.chdir('..')
-    with open('fixBadDiskWriteOK','wb', buffering=0) as f:
+    with open('../fixBadDiskWriteOK','wb', buffering=0) as f:
         f.write(bytes(echo, encoding='utf-8'))
         f.close()
     print("\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")
@@ -125,8 +133,14 @@ if doWrite:
 tIndex = 0
 if doTest:
     print("\nTest...")
+    if os.path.exists('../fixBadDiskWriteOK'):
+        with open('../fixBadDiskWriteOK','rb', buffering=0) as f:
+            print('Write Speed:\n', f.read().decode('utf-8'), '\n')
+
     allt = 0
     cn = 0
+    minsp = 2147483647
+    maxsp = 0
     d = None
     files = os.listdir('.')
     allCount = len(files)
@@ -151,10 +165,15 @@ if doTest:
         uh, um = divmod(um, 60)
         lm, ls = divmod((allCount - i) * fsize / ms, 60)
         lh, lm = divmod(lm, 60)
-        print("\r{:.3f}M/{}M {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(i * fsize, allsize, ms, uh, um, us, lh, lm, ls, fsize / nt, nt), end='         ')
+        nsp = fsize / nt
+        if nsp > maxsp:
+            maxsp = nsp
+        if nsp < minsp:
+            minsp = nsp
+        print("\r{:.3f}M/{:.3f}M Min:{:.3f}M/s Max:{:.3f}M/s {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(i * fsize, allsize, minsp, maxsp, ms, uh, um, us, lh, lm, ls, fsize / nt, nt), end='         ')
         cn += 1
 
-    # Wait test end
+    # Wait test ends
     while tIndex != allCount:
         time.sleep(0.5)
 
