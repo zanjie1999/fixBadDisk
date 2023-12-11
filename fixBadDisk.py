@@ -1,11 +1,12 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
 
-ver = "7.2"
+ver = "7.3"
 
 import os,hashlib,platform,time,threading
 from sys import argv
 
+os.system('')
 fsize = 5
 doTest = os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK')
 doWrite = not os.path.exists('fixBadDiskWriteOK')
