@@ -1,7 +1,7 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
 
-ver = "7.1"
+ver = "7.2"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -182,8 +182,8 @@ if doTest:
     print("\nTest complete 测试完成")
 
 
-if os.path.exists('bad') and not os.listdir('bad'):
-    os.rmdir('bad')
+if os.path.exists('../bad') and not os.listdir('../bad'):
+    os.rmdir('../bad')
 
 print("Press Enter to exit 按回车退出")
 input()
