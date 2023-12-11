@@ -1,7 +1,7 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
 
-ver = "7.0"
+ver = "7.1"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -42,7 +42,7 @@ if len(argv) > 1:
         print('  w: 写入测试')
         print('  t或r: 读测试')
         print('  maxsize: 最大写入量，用于写入测速时指定大小')
-        print('输出：已写入/总容量 Min:最小速度 Max:最大速度 平均速度 已用时间/剩余时间 (当前速度 当前用时)')
+        print('输出：\nMin: 最小速度 Max: 最大速度 Avg: 平均速度\n已写入/总容量 已用时间/剩余时间 (当前速度 当前用时)')
         print('默认' + str(fsize) + 'M，写入满后退出，重新拔插再运行将测试，举个栗子：')
         print('测试4k读速度 fixBadDisk.py 0.004 w 100')
         print('测试4k写速度 fixBadDisk.py 0.004 r')
@@ -109,20 +109,19 @@ if doWrite:
             os.remove(n)
             print(' except ' + n)
             print(e)
-        ms = cn * fsize / allt
-        if ms == 0:
-            ms = 0.0000000001
-        um, us = divmod(allt, 60)
-        uh, um = divmod(um, 60)
-        lm, ls = divmod((allCount - i) * fsize / ms, 60)
-        lh, lm = divmod(lm, 60)
-        nsp = fsize / nt
-        if nsp > maxsp:
-            maxsp = nsp
-        if nsp < minsp:
-            minsp = nsp
-        echo = "\r{:.3f}M/{:.3f}M Min:{:.3f}M/s Max:{:.3f}M/s {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(i * fsize, free, minsp, maxsp, ms, uh, um, us, lh, lm, ls, nsp, nt)
-        print(echo, end='         ')
+        if cn > 1:    
+            ms = cn * fsize / allt
+            um, us = divmod(allt, 60)
+            uh, um = divmod(um, 60)
+            lm, ls = divmod((allCount - i) * fsize / ms, 60)
+            lh, lm = divmod(lm, 60)
+            nsp = fsize / nt
+            if nsp > maxsp:
+                maxsp = nsp
+            if nsp < minsp:
+                minsp = nsp
+            echo = "\033[F\033[KMin: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, i * fsize, free, uh, um, us, lh, lm, ls, nsp, nt)
+            print(echo, end='  ')
         cn += 1
 
     with open('../fixBadDiskWriteOK','wb', buffering=0) as f:
@@ -135,7 +134,7 @@ if doTest:
     print("\nTest...")
     if os.path.exists('../fixBadDiskWriteOK'):
         with open('../fixBadDiskWriteOK','rb', buffering=0) as f:
-            print('Write Speed:\n', f.read().decode('utf-8'), '\n')
+            print('Write Speed:\n\n', f.read().decode('utf-8'), '\n')
 
     allt = 0
     cn = 0
@@ -158,19 +157,18 @@ if doTest:
         except Exception as e:
             print(' except ' + key)
             print(e)
-        ms = cn * fsize / allt
-        if ms == 0:
-            ms = 0.0000000001
-        um, us = divmod(allt, 60)
-        uh, um = divmod(um, 60)
-        lm, ls = divmod((allCount - i) * fsize / ms, 60)
-        lh, lm = divmod(lm, 60)
-        nsp = fsize / nt
-        if nsp > maxsp:
-            maxsp = nsp
-        if nsp < minsp:
-            minsp = nsp
-        print("\r{:.3f}M/{:.3f}M Min:{:.3f}M/s Max:{:.3f}M/s {:.3f}M/s {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(i * fsize, allsize, minsp, maxsp, ms, uh, um, us, lh, lm, ls, fsize / nt, nt), end='         ')
+        if cn > 1: 
+            ms = cn * fsize / allt
+            um, us = divmod(allt, 60)
+            uh, um = divmod(um, 60)
+            lm, ls = divmod((allCount - i) * fsize / ms, 60)
+            lh, lm = divmod(lm, 60)
+            nsp = fsize / nt
+            if nsp > maxsp:
+                maxsp = nsp
+            if nsp < minsp:
+                minsp = nsp
+            print("\033[F\033[KMin:{:.3f}M/s Max:{:.3f}M/s Avg:{:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, i * fsize, allsize, uh, um, us, lh, lm, ls, fsize / nt, nt), end='  ')
         cn += 1
 
     # Wait test ends
