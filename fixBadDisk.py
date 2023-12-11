@@ -78,7 +78,7 @@ tFile = None
 tName = None
 n = None
 if doWrite:
-    print("\nWrite...")
+    print("\nWrite...\n")
     allt = 0
     cn = 0
     st = 0
@@ -132,7 +132,7 @@ if doWrite:
 
 tIndex = 0
 if doTest:
-    print("\nTest...")
+    print("\nTest...\n")
     if os.path.exists('../fixBadDiskWriteOK'):
         with open('../fixBadDiskWriteOK','rb', buffering=0) as f:
             print('Write Speed:\n\n', f.read().decode('utf-8'), '\n')
