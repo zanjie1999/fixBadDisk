@@ -1,7 +1,7 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
 
-ver = "7.3"
+ver = "8.0"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -125,18 +125,22 @@ if doWrite:
             print(echo, end='  ')
         cn += 1
 
-    with open('../fixBadDiskWriteOK','wb', buffering=0) as f:
-        f.write(bytes(echo, encoding='utf-8'))
-        f.close()
-    print("\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")
+    try:
+        with open('../fixBadDiskWriteOK','wb', buffering=0) as f:
+            f.write(bytes(echo, encoding='utf-8'))
+    except:
+        pass
+    print("\n\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")
 
 tIndex = 0
 if doTest:
-    print("\nTest...\n")
+    writeScore = ''
     if os.path.exists('../fixBadDiskWriteOK'):
-        with open('../fixBadDiskWriteOK','rb', buffering=0) as f:
-            print('Write Speed:\n\n', f.read().decode('utf-8'), '\n')
+            with open('../fixBadDiskWriteOK','rb', buffering=0) as f:
+                writeScore = f.read().decode('utf-8')
+                print('\nWrite Speed:\n\n', writeScore)
 
+    print("\nTest...\n")
     allt = 0
     cn = 0
     minsp = 2147483647
@@ -169,7 +173,8 @@ if doTest:
                 maxsp = nsp
             if nsp < minsp:
                 minsp = nsp
-            print("\033[F\033[KMin:{:.3f}M/s Max:{:.3f}M/s Avg:{:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, i * fsize, allsize, uh, um, us, lh, lm, ls, fsize / nt, nt), end='  ')
+            echo = "\033[F\033[KMin:{:.3f}M/s Max:{:.3f}M/s Avg:{:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, i * fsize, allsize, uh, um, us, lh, lm, ls, fsize / nt, nt)
+            print(echo, end='  ')
         cn += 1
 
     # Wait test ends
@@ -178,13 +183,18 @@ if doTest:
 
     try:
         os.remove('../fixBadDiskWriteOK')
+        with open('../fixBadDiskScore.txt', 'a') as f:
+            f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "\r\nWrite Speed:\r\n" + writeScore[6:] + "\r\nRead Speed:\r\n" + echo[6:]+ "\r\n\r\n")
     except:
         pass
-    print("\nTest complete 测试完成")
+    print("\n\nTest complete 测试完成")
 
-
-if os.path.exists('../bad') and not os.listdir('../bad'):
-    os.rmdir('../bad')
+try:
+    os.chdir('..')
+    if os.path.exists('bad') and not os.listdir('bad'):
+        os.rmdir('bad')
+except:
+    pass
 
 print("Press Enter to exit 按回车退出")
 input()
