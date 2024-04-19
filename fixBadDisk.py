@@ -1,3 +1,5 @@
+# coding=utf-8
+
 # Sparkle 坏块屏蔽工具
 # 20200909
 
