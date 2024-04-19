@@ -10,7 +10,7 @@ from sys import argv
 
 os.system('')
 fsize = 5
-savePer = 0.25
+savePer = 0.125
 doTest = os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')
 doWrite = not os.path.exists('fixBadDiskWriteOK.txt')
 
