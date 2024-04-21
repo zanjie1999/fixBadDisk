@@ -3,7 +3,7 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
 
-ver = "9.6"
+ver = "9.7"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -29,7 +29,7 @@ def test_file(d, key):
     if hashlib.md5(d).hexdigest()[:8] == key:
         os.remove(key)
     else:
-        print(' error ' + key)
+        print('\nCheck Error ' + key, '\n')
     tIndex += 1
 
 def gen_file(fsize):
@@ -123,9 +123,9 @@ if doWrite:
                 os.remove(n)
             except:
                 pass
-            print('\nExcept ' + n, '\n', e,'\n')
+            print('\nWrite Error ' + n, '\n', e,'\n')
             continue
-        if i > 1:    
+        try:    
             ms = i * fsize / allt
             um, us = divmod(allt, 60)
             uh, um = divmod(um, 60)
@@ -146,11 +146,14 @@ if doWrite:
                 print('{:.0f}%\n'.format(per))
                 minsp = 2147483647
                 maxsp = 0
+        except:
+            # division by zero
+            pass
 
 
     try:
         with open('../fixBadDiskWriteOK.txt','wb', buffering=0) as f:
-            f.write(bytes(echo[6:].replace('\n', '\r\n') + "\r\n" + ('\r\n'.join(saveSpeed)), encoding='utf-8'))
+            f.write(bytes(echo[6:].replace('\n', '\n') + "\n" + ('\n'.join(saveSpeed)), encoding='utf-8'))
     except:
         pass
     print("\n\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")
@@ -184,9 +187,9 @@ if doTest:
                 allt += nt
                 threading.Thread(target=test_file, args=(d, key)).start()
         except Exception as e:
-            print('\nExcept ' + key, '\n', e,'\n')
+            print('\nRead Error ' + key, '\n', e,'\n')
             continue
-        if i > 1: 
+        try:
             ms = i * fsize / allt
             um, us = divmod(allt, 60)
             uh, um = divmod(um, 60)
@@ -207,6 +210,9 @@ if doTest:
                 print('{:.0f}%\n'.format(per))
                 minsp = 2147483647
                 maxsp = 0
+        except:
+            # division by zero
+            pass
 
     # Wait test ends
     while tIndex != allCount:
@@ -215,7 +221,7 @@ if doTest:
     try:
         os.remove('../fixBadDiskWriteOK.txt')
         with open('../fixBadDiskScore.txt', 'a') as f:
-            f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "\r\nWrite Speed:\r\n" + writeScore + "\r\nRead Speed:\r\n" + echo[6:].replace('\n', '\r\n') + "\r\n" + ('\r\n'.join(saveSpeed))+ "\r\n\r\n")
+            f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "\r\nWrite Speed:\n" + writeScore + "\r\nRead Speed:\n" + echo[6:].replace('\n', '\n') + "\n" + ('\n'.join(saveSpeed))+ "\n\n")
     except:
         pass
     print("\n\nTest complete 测试完成")
