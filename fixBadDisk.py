@@ -3,7 +3,7 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
 
-ver = "9.0"
+ver = "9.6"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -119,9 +119,12 @@ if doWrite:
                 nt = time.time() - st
                 allt += nt
         except Exception as e:
-            os.remove(n)
-            print(' except ' + n)
-            print(e)
+            try:
+                os.remove(n)
+            except:
+                pass
+            print('\nExcept ' + n, '\n', e,'\n')
+            continue
         if i > 1:    
             ms = i * fsize / allt
             um, us = divmod(allt, 60)
@@ -141,10 +144,13 @@ if doWrite:
                 saveSpeed.append("{:.0f}% Min: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s ({:.3f}M/s {:.6f}s)".format(per, minsp, maxsp, ms, nsp, nt))
                 saveIndex = int((len(saveSpeed) + 1) * savePer * allCount)
                 print('{:.0f}%\n'.format(per))
+                minsp = 2147483647
+                maxsp = 0
+
 
     try:
         with open('../fixBadDiskWriteOK.txt','wb', buffering=0) as f:
-            f.write(bytes(echo[6:] + "\r\n" + ('\r\n'.join(saveSpeed)), encoding='utf-8'))
+            f.write(bytes(echo[6:].replace('\n', '\r\n') + "\r\n" + ('\r\n'.join(saveSpeed)), encoding='utf-8'))
     except:
         pass
     print("\n\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")
@@ -178,8 +184,8 @@ if doTest:
                 allt += nt
                 threading.Thread(target=test_file, args=(d, key)).start()
         except Exception as e:
-            print(' except ' + key)
-            print(e)
+            print('\nExcept ' + key, '\n', e,'\n')
+            continue
         if i > 1: 
             ms = i * fsize / allt
             um, us = divmod(allt, 60)
@@ -193,12 +199,14 @@ if doTest:
                 minsp = nsp
             echo = "\033[F\033[KMin:{:.3f}M/s Max:{:.3f}M/s Avg:{:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, i * fsize, allsize, uh, um, us, lh, lm, ls, fsize / nt, nt)
             print(echo, end='  ')
-            if i == saveIndex:
+            if i >= saveIndex:
                 # save now speed
                 per = (len(saveSpeed) + 1) * savePer * 100
                 saveSpeed.append("{:.0f}% Min: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s ({:.3f}M/s {:.6f}s)".format(per, minsp, maxsp, ms, nsp, nt))
                 saveIndex = int((len(saveSpeed) + 1) * savePer * allCount)
                 print('{:.0f}%\n'.format(per))
+                minsp = 2147483647
+                maxsp = 0
 
     # Wait test ends
     while tIndex != allCount:
@@ -207,7 +215,7 @@ if doTest:
     try:
         os.remove('../fixBadDiskWriteOK.txt')
         with open('../fixBadDiskScore.txt', 'a') as f:
-            f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "\r\nWrite Speed:\r\n" + writeScore + "\r\nRead Speed:\r\n" + echo[6:] + "\r\n" + ('\r\n'.join(saveSpeed))+ "\r\n\r\n")
+            f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "\r\nWrite Speed:\r\n" + writeScore + "\r\nRead Speed:\r\n" + echo[6:].replace('\n', '\r\n') + "\r\n" + ('\r\n'.join(saveSpeed))+ "\r\n\r\n")
     except:
         pass
     print("\n\nTest complete 测试完成")
