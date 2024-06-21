@@ -70,6 +70,7 @@ if len(argv) > 1:
             doWrite = False
             doTest = True
 
+print("fixBadDisk v" + ver)
 print("Filesize: " + str(fsize) + "M")
 print("Write: " + str(doWrite))
 print("Read: " + str(doTest))
