@@ -3,7 +3,7 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
 
-ver = "9.3"
+ver = "9.8"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -29,7 +29,7 @@ def test_file(d, key):
     if hashlib.md5(d).hexdigest()[:8] == key:
         os.remove(key)
     else:
-        print(' error ' + key)
+        print('\nCheck Error ' + key, '\n')
     tIndex += 1
 
 def gen_file(fsize):
@@ -72,7 +72,7 @@ if len(argv) > 1:
 
 print("Filesize: " + str(fsize) + "M")
 print("Write: " + str(doWrite))
-print("Test: " + str(doTest))
+print("Read: " + str(doTest))
 print('Path: ' + os.getcwd())
 print("Press Enter to run 按回车开始\n或者把需要测试的盘符拖进来按回车")
 newPath = input()
@@ -82,7 +82,7 @@ if newPath:
     doTest = os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')
     doWrite = not os.path.exists('fixBadDiskWriteOK.txt')
     print("Write: " + str(doWrite))
-    print("Test: " + str(doTest))
+    print("Read: " + str(doTest))
         
 if not os.path.exists('bad'):
     os.mkdir('bad')
@@ -123,10 +123,13 @@ if doWrite:
                 nt = time.time() - st
                 allt += nt
         except Exception as e:
-            os.remove(n)
-            print(' except ' + n)
-            print(e)
-        if i > 1:    
+            try:
+                os.remove(n)
+            except:
+                pass
+            print('\nWrite Error ' + n, '\n', e,'\n')
+            continue
+        try:    
             ms = i * fsize / allt
             um, us = divmod(allt, 60)
             uh, um = divmod(um, 60)
@@ -145,13 +148,18 @@ if doWrite:
                 saveSpeed.append("{:.0f}% Min: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s ({:.3f}M/s {:.6f}s)".format(per, minsp, maxsp, ms, nsp, nt))
                 saveIndex = int((len(saveSpeed) + 1) * savePer * allCount)
                 print('{:.0f}%\n'.format(per))
+                minsp = 2147483647
+                maxsp = 0
+        except:
+            # division by zero
+            pass
+
 
     try:
         with open('../fixBadDiskWriteOK.txt','wb', buffering=0) as f:
-            f.write(bytes(echo[6:] + "\r\n" + ('\r\n'.join(saveSpeed)), encoding='utf-8'))
+            f.write(bytes(echo[6:].replace('\n', '\n') + "\n" + ('\n'.join(saveSpeed)), encoding='utf-8'))
     except:
         pass
-    print("\n\n" + echo[6:] + "\n" + ('\n'.join(saveSpeed)))
     print("\n\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")
 
 tIndex = 0
@@ -183,9 +191,9 @@ if doTest:
                 allt += nt
                 threading.Thread(target=test_file, args=(d, key)).start()
         except Exception as e:
-            print(' except ' + key)
-            print(e)
-        if i > 1: 
+            print('\nRead Error ' + key, '\n', e,'\n')
+            continue
+        try:
             ms = i * fsize / allt
             um, us = divmod(allt, 60)
             uh, um = divmod(um, 60)
@@ -198,12 +206,17 @@ if doTest:
                 minsp = nsp
             echo = "\033[F\033[KMin:{:.3f}M/s Max:{:.3f}M/s Avg:{:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, i * fsize, allsize, uh, um, us, lh, lm, ls, fsize / nt, nt)
             print(echo, end='  ')
-            if i == saveIndex:
+            if i >= saveIndex:
                 # save now speed
                 per = (len(saveSpeed) + 1) * savePer * 100
                 saveSpeed.append("{:.0f}% Min: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s ({:.3f}M/s {:.6f}s)".format(per, minsp, maxsp, ms, nsp, nt))
                 saveIndex = int((len(saveSpeed) + 1) * savePer * allCount)
                 print('{:.0f}%\n'.format(per))
+                minsp = 2147483647
+                maxsp = 0
+        except:
+            # division by zero
+            pass
 
     # Wait test ends
     while tIndex != allCount:
@@ -212,7 +225,7 @@ if doTest:
     try:
         os.remove('../fixBadDiskWriteOK.txt')
         with open('../fixBadDiskScore.txt', 'a') as f:
-            f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "\r\nWrite Speed:\r\n" + writeScore + "\r\nRead Speed:\r\n" + echo[6:] + "\r\n" + ('\r\n'.join(saveSpeed))+ "\r\n\r\n")
+            f.write(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + "\r\nWrite Speed:\n" + writeScore + "\r\nRead Speed:\n" + echo[6:].replace('\n', '\n') + "\n" + ('\n'.join(saveSpeed))+ "\n\n")
     except:
         pass
     print("\n\nTest complete 测试完成")
