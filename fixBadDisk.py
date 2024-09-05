@@ -3,7 +3,7 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
 
-ver = "9.8"
+ver = "10.0"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -71,7 +71,6 @@ if len(argv) > 1:
             doTest = True
 
 print("fixBadDisk v" + ver)
-print("Filesize: " + str(fsize) + "M")
 print("Write: " + str(doWrite))
 print("Read: " + str(doTest))
 print('Path: ' + os.getcwd())
@@ -88,6 +87,23 @@ if newPath:
 if not os.path.exists('bad'):
     os.mkdir('bad')
 os.chdir('bad')
+
+# 没有指定时，自动获取文件大小
+if len(argv) < 2:
+    listBad = os.listdir('.')
+    for f in listBad:
+        nowSize = int(os.path.getsize(f) / 1024 / 1024)
+        if nowSize == fsize:
+            break
+        else:
+            fsize = nowSize
+    print("Filesize: " + str(fsize) + "M")
+    if doWrite and len(listBad) == 0:
+        print("Press Enter to run 按回车开始\n或输入自定义单文件大小按回车")
+        newPath = input()
+        if newPath:
+            fsize = int(newPath)
+            print('File size change to: ' +  + str(fsize) + "M")
 
 echo = ""
 tFile = None
