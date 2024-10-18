@@ -3,7 +3,7 @@
 # Sparkle 坏块屏蔽工具
 # 20200909
 
-ver = "10.0"
+ver = "10.1"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -74,15 +74,17 @@ print("fixBadDisk v" + ver)
 print("Write: " + str(doWrite))
 print("Read: " + str(doTest))
 print('Path: ' + os.getcwd())
-print("Press Enter to run 按回车开始\n或者把需要测试的盘符拖进来按回车")
-newPath = input()
-if newPath:
-    print('Path change to: ' + newPath)
-    os.chdir(newPath)
-    doTest = os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')
-    doWrite = not os.path.exists('fixBadDiskWriteOK.txt')
-    print("Write: " + str(doWrite))
-    print("Read: " + str(doTest))
+if not (os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')):
+    # 当前目录有写入完成的标识文件，直接开始
+    print("Press Enter to run 按回车开始\n或者把需要测试的盘符拖进来按回车")
+    newPath = input()
+    if newPath:
+        print('Path change to: ' + newPath)
+        os.chdir(newPath)
+        doTest = os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')
+        doWrite = not os.path.exists('fixBadDiskWriteOK.txt')
+        print("Write: " + str(doWrite))
+        print("Read: " + str(doTest))
         
 if not os.path.exists('bad'):
     os.mkdir('bad')
@@ -99,11 +101,12 @@ if len(argv) < 2:
             fsize = nowSize
     print("Filesize: " + str(fsize) + "M")
     if doWrite and len(listBad) == 0:
-        print("Press Enter to run 按回车开始\n或输入自定义单文件大小按回车")
+        print("Press Enter to run 按回车开始\n或输入自定义单文件大小(输入数字 单位MB)按回车")
         newPath = input()
         if newPath:
             fsize = int(newPath)
-            print('File size change to: ' +  + str(fsize) + "M")
+            print('File size change to: ' + str(fsize) + "M")
+
 
 echo = ""
 tFile = None
