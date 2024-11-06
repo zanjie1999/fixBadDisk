@@ -1,9 +1,9 @@
 # coding=utf-8
 
-# Sparkle 坏块屏蔽工具
+# Sparkle 坏块屏蔽工具 防作弊测速工具
 # 20200909
 
-ver = "10.1"
+ver = "11.0"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -37,6 +37,7 @@ def gen_file(fsize):
     tFile = os.urandom(int(1024 * 1024 * fsize))
     tName = hashlib.md5(tFile).hexdigest()[:8]
 
+setSize=False
 if len(argv) > 1:
     if argv[1] == '-h' or argv[1] == '--help':
         print('一键 u盘/内存卡/硬盘 坏块/坏道 维修工具 防作弊测速工具 v' + ver)
@@ -53,22 +54,28 @@ if len(argv) > 1:
         print("Press Enter to exit 按回车退出")
         input()
         exit()
-    if argv[1] == 'w':
+
+    # 允许前两个参数顺序互换
+    if argv[1] in ('w', '-w'):
         doWrite = True
         doTest = False
-    elif argv[1] == 't' or argv[1] == 'r':
+    elif argv[1] in ('r', 't', '-r', '-t'):
         doWrite = False
         doTest = True
     else:
         fsize = float(argv[1])
+        setSize = True
         
     if len(argv) > 2:
-        if argv[2] == 'w':
+        if argv[2] in ('w', '-w'):
             doWrite = True
             doTest = False
-        elif argv[2] == 't' or argv[2] == 'r':
+        elif argv[2] in ('r', 't', '-r', '-t'):
             doWrite = False
             doTest = True
+        else:
+            fsize = float(argv[2])
+            setSize = True
 
 print("fixBadDisk v" + ver)
 print("Write: " + str(doWrite))
@@ -91,7 +98,7 @@ if not os.path.exists('bad'):
 os.chdir('bad')
 
 # 没有指定时，自动获取文件大小
-if len(argv) < 2:
+if not setSize:
     listBad = os.listdir('.')
     for f in listBad:
         nowSize = int(os.path.getsize(f) / 1024 / 1024)
