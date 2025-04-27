@@ -1,6 +1,6 @@
 # coding=utf-8
 
-# Sparkle 坏块屏蔽工具 防作弊测速工具
+# Sparkle 坏块屏蔽工具
 # 20200909
 
 ver = "11.0"
@@ -37,15 +37,15 @@ def gen_file(fsize):
     tFile = os.urandom(int(1024 * 1024 * fsize))
     tName = hashlib.md5(tFile).hexdigest()[:8]
 
-setSize=False
 if len(argv) > 1:
     if argv[1] == '-h' or argv[1] == '--help':
         print('一键 u盘/内存卡/硬盘 坏块/坏道 维修工具 防作弊测速工具 v' + ver)
-        print('Usage: fixBadDisk.py [filesize] [w|t|r] [maxsize]')
+        print('Usage: fixBadDisk.py [filesize] [w|r|rw] [maxsize]')
         print('  -h, --help: 显示当前帮助信息')
         print('  filesize: 单个文件大小，fat32下最大为4096M，且最多33000个文件')
         print('  w: 写入测试')
-        print('  t或r: 读测试')
+        print('  r: 读测试')
+        print('  rw: 写满后马上读，可能出现误差，不建议非大容量机械硬盘使用')
         print('  maxsize: 最大写入量，用于写入测速时指定大小')
         print('输出：\nMin: 最小速度 Max: 最大速度 Avg: 平均速度\n已写入/总容量 已用时间/剩余时间 (当前速度 当前用时)')
         print('默认' + str(fsize) + 'M，写入满后退出，重新拔插再运行将测试，举个栗子：')
@@ -54,51 +54,50 @@ if len(argv) > 1:
         print("Press Enter to exit 按回车退出")
         input()
         exit()
-
-    # 允许前两个参数顺序互换
-    if argv[1] in ('w', '-w'):
+    if argv[1] == 'w':
         doWrite = True
         doTest = False
-    elif argv[1] in ('r', 't', '-r', '-t'):
+    elif argv[1] == 'r':
         doWrite = False
         doTest = True
+    elif argv[1] == 'rw':
+        doWrite = True
+        doTest = True
+        print("写满后马上读，可能出现误差，不建议非大容量机械硬盘使用")
     else:
-        fsize = float(argv[1])
-        setSize = True
+        fsize = float(argv[1].lower().replace('b', '').replace('k', '').replace('m', ''))
         
     if len(argv) > 2:
-        if argv[2] in ('w', '-w'):
+        if argv[2] == 'w':
             doWrite = True
             doTest = False
-        elif argv[2] in ('r', 't', '-r', '-t'):
+        elif argv[2] == 'r':
             doWrite = False
             doTest = True
-        else:
-            fsize = float(argv[2])
-            setSize = True
+        elif argv[2] == 'rw':
+            doWrite = True
+            doTest = True
 
 print("fixBadDisk v" + ver)
 print("Write: " + str(doWrite))
 print("Read: " + str(doTest))
 print('Path: ' + os.getcwd())
-if not (os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')):
-    # 当前目录有写入完成的标识文件，直接开始
-    print("Press Enter to run 按回车开始\n或者把需要测试的盘符拖进来按回车")
-    newPath = input()
-    if newPath:
-        print('Path change to: ' + newPath)
-        os.chdir(newPath)
-        doTest = os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')
-        doWrite = not os.path.exists('fixBadDiskWriteOK.txt')
-        print("Write: " + str(doWrite))
-        print("Read: " + str(doTest))
+print("Press Enter to run 按回车开始\n或者把需要测试的盘符拖进来按回车")
+newPath = input()
+if newPath:
+    print('Path change to: ' + newPath)
+    os.chdir(newPath)
+    doTest = os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')
+    doWrite = not os.path.exists('fixBadDiskWriteOK.txt')
+    print("Write: " + str(doWrite))
+    print("Read: " + str(doTest))
         
 if not os.path.exists('bad'):
     os.mkdir('bad')
 os.chdir('bad')
 
 # 没有指定时，自动获取文件大小
-if not setSize:
+if len(argv) < 2:
     listBad = os.listdir('.')
     for f in listBad:
         nowSize = int(os.path.getsize(f) / 1024 / 1024)
@@ -108,12 +107,11 @@ if not setSize:
             fsize = nowSize
     print("Filesize: " + str(fsize) + "M")
     if doWrite and len(listBad) == 0:
-        print("Press Enter to run 按回车开始\n或输入自定义单文件大小(输入数字 单位MB)按回车")
+        print("Press Enter to run 按回车开始\n或输入自定义单文件大小按回车")
         newPath = input()
         if newPath:
             fsize = int(newPath)
-            print('File size change to: ' + str(fsize) + "M")
-
+            print('File size change to: ' +  + str(fsize) + "M")
 
 echo = ""
 tFile = None
