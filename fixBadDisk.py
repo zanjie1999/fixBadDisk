@@ -1,13 +1,13 @@
 # Sparkle 坏块屏蔽工具 防作弊测速工具
 # 20200909
 
-ver = "12.0"
+ver = "13.0"
 
 import os,hashlib,platform,time,threading
 from sys import argv
 
 os.system('')
-fsize = 5
+fsize = 10
 savePer = 0.1
 doTest = os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')
 doWrite = not os.path.exists('fixBadDiskWriteOK.txt')
@@ -34,6 +34,17 @@ def gen_file(fsize):
     global tFile,tName
     tFile = os.urandom(int(1024 * 1024 * fsize))
     tName = hashlib.md5(tFile).hexdigest()[:8]
+
+def connect_err():
+    try:
+        if os.getcwd() == badDir:
+            if platform.system() == 'Windows':
+                os.chdir('c:/')
+            else:
+                os.chdir('/')
+        os.chdir(badDir)
+    except:
+        return True
 
 setSize=False
 if len(argv) > 1:
@@ -75,7 +86,7 @@ if len(argv) > 1:
         elif argv[2] in ('r', '-r'):
             doWrite = False
             doTest = True
-        elif argv[1] in ('rw', '-rw'):
+        elif argv[2] in ('rw', '-rw'):
             doWrite = True
             doTest = True
             print("写满后马上读，可能出现误差，不建议非大容量机械硬盘使用")
@@ -102,6 +113,7 @@ if not (os.path.exists('bad') and os.path.exists('fixBadDiskWriteOK.txt')):
 if not os.path.exists('bad'):
     os.mkdir('bad')
 os.chdir('bad')
+badDir = os.getcwd()
 
 # 没有指定时，自动获取文件大小
 if not setSize:
@@ -156,11 +168,14 @@ if doWrite:
                 nt = time.time() - st
                 allt += nt
         except Exception as e:
+            print('\nWrite Error ' + n, '\n', e,'\n')
+            while connect_err():
+                print('Connect Error 掉盘了！等待重连')
+                time.sleep(3)
             try:
                 os.remove(n)
             except:
                 pass
-            print('\nWrite Error ' + n, '\n', e,'\n')
             continue
         try:    
             ms = i * fsize / allt
@@ -225,6 +240,9 @@ if doTest:
                 threading.Thread(target=test_file, args=(d, key)).start()
         except Exception as e:
             print('\nRead Error ' + key, '\n', e,'\n')
+            while connect_err():
+                print('Connect Error 掉盘了！等待重连')
+                time.sleep(3)
             continue
         try:
             ms = i * fsize / allt
