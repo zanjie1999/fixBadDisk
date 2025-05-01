@@ -5,9 +5,10 @@
 可以随时ctrl+c或是关闭来暂停，下一次运行会继续上一次的进度继续填满
 
 ### 使用本工具测速，可以避免设备对像AS SSD Benchmark或是CrystalDiskMark等跑分测速工具的神仙优化，测出最真实的速度，最接近实际使用体验，作弊だめ  
+如果写到一半或者读到一半，硬盘掉盘了，那么就会自动等待硬盘重连后继续写入和读取
 
 ## 如何使用
-最简单的方式：放到要测的盘，直接运行，按提示操作，等待写完全盘，拔出盘，重新插上，再运行  
+最简单的方式：直接运行，按提示操作  
 具体的使用方式你可以使用参数 `-h` 查看，可以一键指定占位文件大小以及进行更深入的测试  
 
 输出：  
@@ -46,12 +47,13 @@ Min:794.465M/s Max:930.698M/s Avg:1015.926M/s
 
 ### 进阶
 
-fixBadDisk [filesize] [w|t|r] [maxsize]  
-  -h, --help: 显示当前帮助信息  
-  filesize: 单个文件大小，fat32下最大为4096M，且最多33000个文件  
-  w: 写入测试  
-  t或r: 读测试  
-  maxsize: 最大写入量，用于写入测速时指定大小  
+fixBadDisk [filesize] [r|w|rw] [maxsize]  
+  -h, --help: 显示当前帮助信息
+  filesize: 单个文件大小，fat32下最大为4096M，且最多33000个文件
+  w: 写入测试
+  t或r: 读测试
+  rw: 写满后马上读，可能出现误差，不建议非大容量机械硬盘使用
+  maxsize: 最大写入量，用于写入测速时指定大小
 
 举个例子，10m一个文件，写满后测试  
 `fixBadDisk 10`  
@@ -59,12 +61,14 @@ fixBadDisk [filesize] [w|t|r] [maxsize]
 再举个例子，只写满不测试  
 `fixBadDisk 10 w`  
 写的时候使用10m一个文件，读测试  
-`fixBadDisk 10 t`
+`fixBadDisk 10 r`
 
 再再举个例子，4k一个文件，写1G测速  
 `fixBadDisk 0.004 w 1024`  
 写的时候使用4k一个文件，读测试  
-`fixBadDisk 0.004 t`
+`fixBadDisk 0.004 r`
+
+其中前两个参数允许对调
 
 mac和linux系统自带Python3，上面绿色按钮下载或者 [右键另存为](https://github.com/zanjie1999/fixBadDisk/raw/main/fixBadDisk.py) ，把文件放在需要检测的盘，直接`python3 fixBadDisk.py`运行  
 Windows用户可以在 [这里](https://github.com/zanjie1999/fixBadDisk/releases) 下载fixBadDisk.exe，放到需要检测的盘直接点开运行  
