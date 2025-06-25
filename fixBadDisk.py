@@ -1,7 +1,7 @@
 # Sparkle 坏块屏蔽工具 防作弊测速工具
 # 20200909
 
-ver = "13.0"
+ver = "13.1"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -143,6 +143,7 @@ if doWrite:
     allt = 0
     st = 0
     minsp = 2147483647
+    minavg = 2147483647
     maxsp = 0
     if len(argv) > 3:
         free = float(argv[3])
@@ -188,12 +189,14 @@ if doWrite:
                 maxsp = nsp
             if nsp < minsp:
                 minsp = nsp
-            echo = "\033[F\033[KMin: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, i * fsize, free, uh, um, us, lh, lm, ls, nsp, nt)
+            if nt > allt / i and ms < minavg:
+                minavg = ms
+            echo = "\033[F\033[KMin: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s MinAvg: {:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, minavg, i * fsize, free, uh, um, us, lh, lm, ls, nsp, nt)
             print(echo, end='  ')
             if i == saveIndex:
                 # save now speed
                 per = (len(saveSpeed) + 1) * savePer * 100
-                saveSpeed.append("{:.0f}% Min: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s ({:.3f}M/s {:.6f}s)".format(per, minsp, maxsp, ms, nsp, nt))
+                saveSpeed.append("{:.0f}% Min: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s  MinAvg: {:.3f}M/s ({:.3f}M/s {:.6f}s)".format(per, minsp, maxsp, ms, minavg, nsp, nt))
                 saveIndex = int((len(saveSpeed) + 1) * savePer * allCount)
                 print('{:.0f}%\n'.format(per))
                 minsp = 2147483647
@@ -221,6 +224,7 @@ if doTest:
     print("\nTest...\n")
     allt = 0
     minsp = 2147483647
+    minavg = 2147483647
     maxsp = 0
     d = None
     files = os.listdir('.')
@@ -255,12 +259,14 @@ if doTest:
                 maxsp = nsp
             if nsp < minsp:
                 minsp = nsp
-            echo = "\033[F\033[KMin:{:.3f}M/s Max:{:.3f}M/s Avg:{:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, i * fsize, allsize, uh, um, us, lh, lm, ls, fsize / nt, nt)
+            if nt > allt / i and ms < minavg:
+                minavg = ms
+            echo = "\033[F\033[KMin: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s MinAvg: {:.3f}M/s\n{:.3f}M/{:.3f}M {:02.0f}:{:02.0f}:{:02.0f}/{:02.0f}:{:02.0f}:{:02.0f} ({:.3f}M/s {:.6f}s)".format(minsp, maxsp, ms, minavg, i * fsize, allsize, uh, um, us, lh, lm, ls, fsize / nt, nt)
             print(echo, end='  ')
             if i >= saveIndex:
                 # save now speed
                 per = (len(saveSpeed) + 1) * savePer * 100
-                saveSpeed.append("{:.0f}% Min: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s ({:.3f}M/s {:.6f}s)".format(per, minsp, maxsp, ms, nsp, nt))
+                saveSpeed.append("{:.0f}% Min: {:.3f}M/s Max: {:.3f}M/s Avg: {:.3f}M/s MinAvg: {:.3f}M/s ({:.3f}M/s {:.6f}s)".format(per, minsp, maxsp, ms, minavg, nsp, nt))
                 saveIndex = int((len(saveSpeed) + 1) * savePer * allCount)
                 print('{:.0f}%\n'.format(per))
                 minsp = 2147483647
