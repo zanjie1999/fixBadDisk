@@ -1,7 +1,7 @@
 # Sparkle 坏块屏蔽工具 防作弊测速工具
 # 20200909
 
-ver = "13.1"
+ver = "13.2"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -165,6 +165,7 @@ if doWrite:
             with open(n,'wb', buffering=0) as f:
                 f.write(b)
                 f.flush()
+                os.fsync(f.fileno())
                 f.close()
                 nt = time.time() - st
                 allt += nt
