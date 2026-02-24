@@ -1,7 +1,7 @@
 # Sparkle 坏块屏蔽工具 防作弊测速工具
 # 20200909
 
-ver = "13.2"
+ver = "14.0"
 
 import os,hashlib,platform,time,threading
 from sys import argv
@@ -207,20 +207,39 @@ if doWrite:
             pass
 
 
+
     try:
         with open('../fixBadDiskWriteOK.txt','wb', buffering=0) as f:
             f.write(bytes(echo[6:].replace('\n', '\n') + "\n" + ('\n'.join(saveSpeed)), encoding='utf-8'))
     except:
         pass
+    
+    # 填充最后剩余的空间
+    if not len(argv) > 3:
+        gen_file(get_free_space_mb('.'))
+        try:
+            with open(tName,'wb', buffering=0) as f:
+                f.write(tFile)
+                f.flush()
+                os.fsync(f.fileno())
+                f.close()
+        except Exception as e:
+            print("填充剩余空间失败：" + e)
+
+
     print("\n\nWrite complete, please unplug and reinsert the disk and run this program\n写入完成，请拔掉再插入磁盘并运行此程序")
 
 tIndex = 0
 if doTest:
     writeScore = ''
     if os.path.exists('../fixBadDiskWriteOK.txt'):
+        try:    
             with open('../fixBadDiskWriteOK.txt','rb', buffering=0) as f:
                 writeScore = f.read().decode('utf-8')
                 print('\nWrite Speed:\n\n', writeScore)
+        except:
+            writeScore = '\nData Error! 扩容盘！\n'*3
+            print(writeScore)
 
     print("\nTest...\n")
     allt = 0
